@@ -1,85 +1,79 @@
-import React, {Component} from "react"
-import { Link } from "gatsby"
-import Axios from "axios"
-import {Form, Input} from 'antd';
+import Axios from 'axios';
+import React, {useState, useEffect} from 'react';
 
+import {Form, Input} from 'antd';
 import Layout from "../components/layout"
 import SEO from "../components/seo"
 
 const {Search} = Input;
 
-class Dashboard extends Component {
-    constructor(props){
-        super(props);
-        this.state = {
-            champions: [],
-            loaded: false,
-            validChamp: true
-        }
-    }
-    
-    componentDidMount(){
-        this.getChampions()
-    }
+const Dashboard = () => {
+    const [champions, setChampions] = useState();
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
+    const [validChamp, setValidChamp] = useState(true);
 
-    getChampions = async() => {
-        await Axios.get(`http://ddragon.leagueoflegends.com/cdn/10.25.1/data/en_US/champion.json`)
+    const getChampions = async() => {
+        const champURL = 'http://ddragon.leagueoflegends.com/cdn/10.25.1/data/en_US/champion.json';
+        await Axios.get(champURL)
             .then((res) =>{
-                    for(const champ in res.data.data){
-                        this.setState({
-                            champions: [...this.state.champions, {name:`${res.data.data[champ].name}`, id:`${res.data.data[champ].id}`}]
-                        })
-                    }
-                }
-            )
-        .catch( (err) => 
-            console.log(err)
-        )
-        this.setState({loaded: true})
-        console.log(this.state.champions)
+                setChampions(res.data.data);     
+            })
+            .catch((err) => {
+                console.log(err);
+                setError(true);
+            })
+            .finally(() => {
+                setLoading(false)
+            })
     }
 
-    searchChamp = (value) => {
-        const {champions} = this.state;
-        console.log(value)
-
+    useEffect(() => {
+        getChampions();
+    }, []);
+    
+    const searchChamp = (value) => {
         for(const champ in champions){
-            if(value.toLowerCase() === `${champions[champ].name}`.toLowerCase() || value.toLowerCase() === `${champions[champ].id}`.toLowerCase()){
-
-                return `${champions[champ].id}`
-            }
+            if(value.toLowerCase() === champions[champ].name.toLowerCase() || 
+                value.toLowerCase() === champions[champ].id.toLowerCase()){
+                    console.log('champ id: ', champions[champ].id)
+                    return champions[champ].id
+                }
         }
-
-        this.setState({
-            validChamp: false
-        })
-
+        setValidChamp(false);
     }
 
-    render(){
-        return(
+    
+    if(loading){
+        return(<div>loading</div>);
+    }
+    if(error){
+        return(<div>error</div>)
+    }
+    return (
+        <div>
             <Layout>
                 <SEO title="Dashboard" />
                 <h1>Choose Your Champion!</h1>
                 
                 <p>Welcome to my League of Legends damage calculator. Choose your champion and items to see how much your abilities do.</p>
 
-                <Form onFinish={this.onFinish}>
+                <Form>
                     <Form.Item >
                         <Search
                             id="searchChamp"
                             placeholder="Search Champion"
-                            onSearch={value => this.searchChamp(value)}
-                            onChange= {() => this.setState({validChamp: true})}
+                            onSearch={value => searchChamp(value)}
+                            onChange= {() => setValidChamp(true)}
                             enterButton
                         />
                     </Form.Item>
                 </Form>
 
-                {!this.state.validChamp && <p>please enter a valid champion</p>}
+                {!validChamp && <p>please enter a valid champion</p>}
             </Layout>
-        )
-    }
-        
-}   
-export default Dashboard
+        </div>
+    );
+};
+
+export default Dashboard;
