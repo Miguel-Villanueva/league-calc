@@ -5,35 +5,25 @@ import {Form, Input} from 'antd';
 import Layout from "../components/layout"
 import SEO from "../components/seo"
 import {useChampionList} from "../components/api/hooks"
+import {searchChamp} from "../components/utils"
 
 const {Search} = Input;
 
 function Dashboard (){
     const response = useChampionList();
     const champions = response.champions;
-    const [loading, setLoading] = useState(response.loading);
-    const [error, setError] = useState(response.setError);  
+  
     const [validChamp, setValidChamp] = useState(true);
     
-    const searchChamp = (value) => {
-        for(const champ in champions){
-            if(value.toLowerCase() === champions[champ].name.toLowerCase() || 
-                value.toLowerCase() === champions[champ].id.toLowerCase()){
-                    navigate("/calculator", 
-                         {
-                            state: {
-                                id: champions[champ].id}
-                            }
-                    )
-                }
-        }
-        setValidChamp(false);
+    const goToCalc = (value) => {
+        const champID = searchChamp(value, champions);
+        (champID ? navigate("/calculator", {state: {id: champID}}) : setValidChamp(false));
     }
 
-    if(!loading){
+    if(response.loading){
         return(<div>loading</div>);
     }
-    if(error){
+    if(response.error){
         return(<div>error</div>)
     }
     return (
@@ -49,7 +39,7 @@ function Dashboard (){
                         <Search
                             id="searchChamp"
                             placeholder="Search Champion"
-                            onSearch={value => searchChamp(value)}
+                            onSearch={value => goToCalc(value)}
                             onChange= {() => setValidChamp(true)}
                             enterButton="Search"
                         />

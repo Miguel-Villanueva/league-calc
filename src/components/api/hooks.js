@@ -2,26 +2,23 @@ import Axios from 'axios';
 import React, {useState, useEffect} from 'react';
 import {championsURL, dataURL} from './constants'
 
+
 //Transforms champion data
 export function useChampionList() {
-    const [champions, setChampions] = useState();
+    const [champions, setChampions] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false); 
 
     useEffect( () => {
         const fetchChampList = async () => {
-            await Axios.get(championsURL)
-            .then((res) => {
+            try{
+                const res = await Axios.get(championsURL);
                 setChampions(res.data.data);
-            })
-            .catch((err) => {
-                console.log(err);
+            } catch(e) {
                 setError(true);
-            })
-            .finally(() => {
-                setLoading(false)
-            });
-
+            } finally {
+                setLoading(false);
+            }
         }
         fetchChampList();
     }, []);
@@ -38,19 +35,14 @@ export function useChampStats(champID) {
 
     useEffect( () => {
         const fetchChampData = async () => {
-            await Axios.get(champDataURL)
-            .then((res) => {
+            try{
+                const res = await Axios.get(champDataURL);
                 setStats(res.data.data[champID].stats)
-                
-            })
-            .catch((err) => {
-                console.log(err);
+            } catch(e) {
                 setError(true);
-            })
-            .finally(() => {
-                setLoading(false)
-            });
-
+            } finally {
+                setLoading(false);
+            }
         }
         fetchChampData();
     }, [champDataURL]);
